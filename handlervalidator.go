@@ -18,6 +18,7 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 	type errorResponse struct {
 		Error string `json:"error"`
 	}
+	const maxChirpLength = 140
 	var statusCode int
 	var response any
 	decoder := json.NewDecoder(r.Body)
@@ -31,7 +32,7 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(params.Body) > 140 {
+	if len(params.Body) > maxChirpLength {
 		//prepare error response
 		response = errorResponse{Error: "Chirp is too long"}
 		statusCode = http.StatusBadRequest
@@ -60,22 +61,20 @@ func respondWithJSON(response any, statusCode int, w http.ResponseWriter) {
 }
 
 func sanitizeInput(str string) string {
-	profane := [3]string{"kerfuffle", "sharbert", "fornax"}
-	a := strings.Split(str, " ")
-	result := make([]string, len(a))
-	for i, v := range a {
+	badWords := [3]string{"kerfuffle", "sharbert", "fornax"}
+	words := strings.Split(str, " ")
+	for i, word := range words {
 		match := false
-		for _, p := range profane {
-			if strings.ToLower(v) == p {
+		for _, badWord := range badWords {
+			if strings.ToLower(word) == badWord {
 				match = true
 				break
 			}
 		}
 		if match {
-			result[i] = "****"
+			words[i] = "****"
 			continue
 		}
-		result[i] = v
 	}
-	return strings.Join(result, " ")
+	return strings.Join(words, " ")
 }
