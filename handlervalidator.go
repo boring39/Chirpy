@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +12,8 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 		Body string `json:"body"`
 	}
 	type validResponse struct {
-		Valid bool `json:"valid"`
+		Valid   bool   `json:"valid"`
+		Cleaned string `json:"cleaned_body"`
 	}
 	type errorResponse struct {
 		Error string `json:"error"`
@@ -35,7 +37,10 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 		statusCode = http.StatusBadRequest
 	} else {
 		// prepare valid response
-		response = validResponse{Valid: true}
+		response = validResponse{
+			Valid:   true,
+			Cleaned: sanitizeInput(params.Body),
+		}
 		statusCode = http.StatusOK
 	}
 
@@ -52,4 +57,25 @@ func respondWithJSON(response any, statusCode int, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(statusCode)
 	w.Write(responseBody)
+}
+
+func sanitizeInput(str string) string {
+	profane := [3]string{"kerfuffle", "sharbert", "fornax"}
+	a := strings.Split(str, " ")
+	result := make([]string, len(a))
+	for i, v := range a {
+		match := false
+		for _, p := range profane {
+			if strings.ToLower(v) == p {
+				match = true
+				break
+			}
+		}
+		if match {
+			result[i] = "****"
+			continue
+		}
+		result[i] = v
+	}
+	return strings.Join(result, " ")
 }
