@@ -35,7 +35,7 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	cfg.fileserverHits.Store(0)
-	err := cfg.db.DeleteAllUsers(r.Context())
+	err := cfg.db.Reset(r.Context())
 	if err != nil {
 		response := errorResponse{Error: "Internal Database Error"}
 		statusCode = http.StatusInternalServerError

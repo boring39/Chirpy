@@ -19,7 +19,7 @@ type apiConfig struct {
 	db             *database.Queries
 }
 type User struct {
-	ID        uuid.UUID `json:"id"`
+	UserId    uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
@@ -49,10 +49,11 @@ func main() {
 	mux.Handle("/app/", handlerApp)
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("POST /api/validate_chirp", apiCfg.handlerChirpsCreate)
+	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsCreate)
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
-	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
