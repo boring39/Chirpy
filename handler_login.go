@@ -5,10 +5,9 @@ import (
 	"net/http"
 
 	"github.com/boring39/Chirpy/internal/auth"
-	"github.com/boring39/Chirpy/internal/database"
 )
 
-func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password string `json:"password"`
 		Email    string `json:"email"`
@@ -25,21 +24,17 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		respondWithJSON(errorResponse{Error: "Something went wrong"}, http.StatusBadRequest, w)
 		return
 	}
-
 	email := params.Email
-	hashedPassword, err := auth.HashPassword(params.Password)
+
+	user, err := cfg.db.GetUserByEmail(r.Context(), email)
 	if err != nil {
 		respondWithJSON(errorResponse{Error: "Something went wrong"}, http.StatusInternalServerError, w)
 		return
 	}
 
-	dbParam := database.CreateUserParams{
-		Email:          email,
-		HashedPassword: hashedPassword,
-	}
-	user, err := cfg.db.CreateUser(r.Context(), dbParam)
-	if err != nil {
-		respondWithJSON(errorResponse{Error: "Something went wrong"}, http.StatusInternalServerError, w)
+	match, err := auth.CheckPasswordHash(params.Password, user.HashedPassword)
+	if !match || err != nil {
+		respondWithJSON(errorResponse{Error: "Incorrect email or password"}, http.StatusUnauthorized, w)
 		return
 	}
 
@@ -49,6 +44,6 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
 	}
-	respondWithJSON(response, http.StatusCreated, w)
+	respondWithJSON(response, http.StatusOK, w)
 
 }
