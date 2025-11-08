@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+
 	"net/http"
 	"strings"
 )
@@ -46,18 +46,6 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(response, statusCode, w)
-}
-
-func respondWithJSON(response any, statusCode int, w http.ResponseWriter) {
-	responseBody, err := json.Marshal(response)
-	if err != nil {
-		log.Printf("Error marshalling JSON: %s", err)
-		statusCode = http.StatusInternalServerError
-		responseBody = []byte(`{"error":"Something went wrong"}`)
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(statusCode)
-	w.Write(responseBody)
 }
 
 func sanitizeInput(str string) string {
